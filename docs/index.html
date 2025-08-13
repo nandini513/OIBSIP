@@ -1,58 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Expression Calculator</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Age Calculator</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="page-overlay">
-    <div class="calculator">
-      <!-- Header with toggle on top -->
-      <div class="calc-header">
-        <button id="themeToggle" class="theme-btn">Toggle Theme</button>
-      </div>
 
-      <!-- Display -->
-      <div id="display" class="display">0</div>
-
-      <!-- Buttons -->
-      <div class="buttons">
-  <button class="btn func">√</button>
-  <button class="btn func">C</button>
-  <button class="btn func">⌫</button>
-  <button class="btn op">%</button>
-
-  <button class="btn num">7</button>
-  <button class="btn num">8</button>
-  <button class="btn num">9</button>
-  <button class="btn op">÷</button>
-
-  <button class="btn num">4</button>
-  <button class="btn num">5</button>
-  <button class="btn num">6</button>
-  <button class="btn op">×</button>
-
-  <button class="btn num">1</button>
-  <button class="btn num">2</button>
-  <button class="btn num">3</button>
-  <button class="btn op">-</button>
-
-  <button class="btn func">+/-</button>
-  <button class="btn num">0</button>
-  <button class="btn num">.</button>
-  <button class="btn op">+</button>
-
-  <button class="btn num">(</button>
-  <button class="btn num">)</button>
-  <button class="btn func">x²</button>
-  <button class="btn equal">=</button>
-</div>
-
-    </div>
+  <div class="form-box">
+    <h2>Enter Your Date of Birth</h2>
+    <form id="ageForm">
+      <input type="date" name="dob" required>
+      <button id="goToResult" type="submit">Calculate Age</button>
+    </form>
   </div>
 
+  <!-- JavaScript file linked here -->
   <script src="script.js"></script>
 </body>
 </html>
+

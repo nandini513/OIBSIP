@@ -1,195 +1,62 @@
-const display = document.getElementById('display');
-const buttons = document.querySelectorAll('.buttons .btn');
-const themeToggle = document.getElementById('themeToggle');
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("ageForm");
+  const dobInput = document.querySelector("input[name='dob']");
 
-let expr = '';
-let resultShown = false;
+  if (form && dobInput) {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
 
-// Button clicks
-buttons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    handleInput(btn.textContent.trim());
-  });
-});
+      const dobValue = new Date(dobInput.value);
+      const today = new Date();
 
-// Keyboard support
-document.addEventListener('keydown', function (e) {
-  const k = e.key;
-  if ((k >= '0' && k <= '9') || k === '.' || k === '(' || k === ')') {
-    handleInput(k);
-  } else if (k === 'Enter') {
-    handleInput('=');
-  } else if (k === 'Backspace') {
-    backspace();
-  } else if (k.toLowerCase() === 'c') {
-    handleInput('C');
-  } else if (['+','-','*','/','%'].includes(k)) {
-    handleInput(k === '*' ? '×' : k === '/' ? '÷' : k);
+      // Remove existing error if any
+      const oldMsg = document.querySelector(".error-msg");
+      if (oldMsg) oldMsg.remove();
+
+      if (dobValue > today) {
+        const msg = document.createElement("div");
+        msg.className = "error-msg";
+        msg.style.color = "red";
+        msg.style.marginTop = "10px";
+        msg.textContent = "Date of birth cannot be in the future.";
+        form.appendChild(msg);
+      } else {
+        // Store DOB in localStorage and redirect
+        localStorage.setItem("dob", dobInput.value);
+        window.location.href = "in.html";
+      }
+    });
+  }
+
+  // On the result page
+  if (window.location.pathname.includes("in.html")) {
+    const dobStored = localStorage.getItem("dob");
+
+    if (dobStored) {
+      const dob = new Date(dobStored);
+      const today = new Date();
+
+      let years = today.getFullYear() - dob.getFullYear();
+      let months = today.getMonth() - dob.getMonth();
+      let days = today.getDate() - dob.getDate();
+
+      if (days < 0) {
+        months--;
+        const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+        days += lastMonth.getDate();
+      }
+
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      const resultText = `${years} years<br>${months} months<br>${days} days`;
+      const resultPara = document.getElementById("result");
+      if (resultPara) {
+        resultPara.innerHTML = resultText;
+      }
+    }
   }
 });
 
-// Theme toggle
-themeToggle.addEventListener('click', () => {
-  document.body.classList.toggle('dark');
-});
-
-function handleInput(value) {
-  if (isNumberOrDot(value) || value === '(' || value === ')') {
-    handleNumber(value);
-  } else if (value === 'C') {
-    clearAll();
-  } else if (value === '⌫') {
-    backspace();
-  } else if (value === '√' || value === 'x²') {
-    handleUnary(value);
-  } else if (value === '+/-') {
-    toggleSign();
-  } else if (value === '=') {
-    compute();
-  } else if (isOperator(value)) {
-    handleOperator(value);
-  }
-}
-
-function isNumberOrDot(v) {
-  return (!isNaN(v) && v !== ' ') || v === '.';
-}
-
-function isOperator(c) {
-  return ['+','-','×','÷','%'].includes(c);
-}
-
-function handleNumber(n) {
-  if (resultShown) {
-    expr = (n === '.') ? '0.' : n;
-    resultShown = false;
-    updateDisplay(expr);
-    return;
-  }
-  const lastNum = getLastNumber();
-  if (n === '.' && lastNum.includes('.')) return;
-  expr += n;
-  updateDisplay(expr);
-}
-
-function handleOperator(op) {
-  if (expr === '' && op === '-') {
-    expr = '-';
-    updateDisplay(expr);
-    return;
-  }
-  if (expr === '') return;
-  if (isOperator(expr.slice(-1))) {
-    expr = expr.slice(0, -1) + op;
-  } else {
-    expr += op;
-  }
-  resultShown = false;
-  updateDisplay(expr);
-}
-
-function handleUnary(op) {
-  if (expr === '') return;
-  const value = safeEvaluate(expr);
-  if (value === null) { showError(); return; }
-  let out;
-  if (op === '√') {
-    if (value < 0) { showError(); return; }
-    out = Math.sqrt(value);
-  } else if (op === 'x²') {
-    out = value * value;
-  }
-  expr = formatNumber(out);
-  updateDisplay(expr);
-  resultShown = true;
-}
-function toggleSign() {
-  if (expr === '') return;
-
-  let lastNum = getLastNumber();
-  if (lastNum === '') return;
-
-  const start = expr.length - lastNum.length;
-
-  // Remove parentheses if they wrap the number
-  if (lastNum.startsWith('(') && lastNum.endsWith(')')) {
-    lastNum = lastNum.slice(1, -1);
-  }
-
-  if (lastNum.startsWith('-')) {
-    // Already negative → make positive
-    lastNum = lastNum.slice(1);
-  } else {
-    // Positive → make negative
-    lastNum = '-' + lastNum;
-  }
-
-  // If it's not the first number in the expression, wrap in parentheses to avoid operator confusion
-  const wrapped = (start > 0) ? `(${lastNum})` : lastNum;
-
-  expr = expr.slice(0, start) + wrapped;
-  updateDisplay(expr);
-}
-
-
-
-function compute() {
-  if (expr === '') return;
-  if (isOperator(expr.slice(-1))) return;
-  const value = safeEvaluate(expr);
-  if (value === null) { showError(); return; }
-  expr = formatNumber(value);
-  updateDisplay(expr);
-  resultShown = true;
-}
-
-function backspace() {
-  if (resultShown) {
-    clearAll();
-    return;
-  }
-  expr = expr.slice(0, -1);
-  updateDisplay(expr || '0');
-}
-
-function clearAll() {
-  expr = '';
-  resultShown = false;
-  updateDisplay('0');
-}
-
-function updateDisplay(text) {
-  display.textContent = text;
-}
-
-function showError() {
-  display.textContent = 'Error';
-  expr = '';
-  resultShown = true;
-}
-
-function safeEvaluate(s) {
-  const sanitized = s.replace(/×/g, '*').replace(/÷/g, '/').replace(/%/g, '%');
-  if (/[^0-9+\-*/().%\s]/.test(sanitized)) return null;
-  try {
-    const val = Function(`"use strict"; return (${sanitized})`)();
-    if (typeof val !== 'number' || !isFinite(val)) return null;
-    return val;
-  } catch {
-    return null;
-  }
-}
-
-function getLastNumber() {
-  let i = expr.length - 1;
-  let num = '';
-  while (i >= 0 && !isOperator(expr[i]) && expr[i] !== '(' && expr[i] !== ')') {
-    num = expr[i] + num;
-    i--;
-  }
-  return num;
-}
-
-function formatNumber(n) {
-  return parseFloat(Number(n).toFixed(10)).toString();
-}
